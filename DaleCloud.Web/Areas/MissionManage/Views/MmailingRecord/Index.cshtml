@@ -1,0 +1,281 @@
+﻿@{ ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml"; }
+
+<script>
+
+
+
+
+    $(function () {
+        gridList();
+       // initFileInput();
+       // $("#NF-importDataUp").fileinput({ showCaption: false, dropZoneEnabled: false ,});
+    })
+
+
+    function btn_importData() {
+        /*批量导入*/
+        /*#load:为按钮,点击后生成一个隐藏的input file标签*/
+        $('#NF-importData').after('<input type="file" id="load_xls" name="file" style="display:none" onchange ="uploadFile()">');
+        $('#NF-importData').click(function () {
+            document.getElementById("load_xls").click();
+        });
+    }
+
+
+    function uploadFile() {
+        var myform = new FormData();
+        var fileName = $('#load_xls')[0].files[0];
+        myform.append('file', $('#load_xls')[0].files[0]);
+
+        if (fileName !== undefined) {
+            var file_typename = fileName.name.substring(fileName.name.lastIndexOf('.'));
+            if (file_typename === '.xlsx' || file_typename === '.xls') {
+                $.ajax({
+                    url: "/MissionManage/MmailingRecord/ImportData",
+                    type: "POST",
+                    data: myform,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {                                                
+                        ajaxobj = eval("(" + data + ")");
+                     //   alert(ajaxobj.state)
+
+                        //将输入的值中换行符替换为逗号
+                        var str = ajaxobj.message.replace(/,/g, "<br>");;
+                        //转成数组并去掉空值
+                        //str = str.split(',').filter(s => s && s.trim());
+
+                        if (ajaxobj.state == "error") {
+                            $.modalMsg(str, "error");
+                        }
+                        if (ajaxobj.state == "success") {
+                            $.modalMsg(ajaxobj.message, "success");
+                            $("#btn_search").click();
+                        }
+                                             
+                    },
+                    error: function (data) {
+                        //ajaxobj = eval("(" + data + ")");
+                        //alert(ajaxobj.message)
+                        $.modalMsg("操作失败", "error");
+                    }
+                });
+            } else {
+            //  console.log("请选择正确的文件类型！")
+                $.modalMsg("请选择正确的文件类型", "error");
+            }
+        } else {
+         //   console.log("请选择正确的文件！")
+            $.modalMsg("请选择正确的Excel文件!", "error");
+        }
+
+
+
+
+
+    }
+    function gridList() {
+        $('#dg').datagrid({
+            url: '/MissionManage/MmailingRecord/GetGridJson',
+            toolbar: '#toolbar',
+            autoRowHeight: false,
+            nowrap: true,
+            singleSelect: true,
+            rownumbers: true,
+            method: 'get',
+            pagination: true,
+            pageSize: 20,
+            sortName: 'F_CreatorTime',
+            sortOrder: 'desc',
+            queryParams: {
+                keyword: "",
+            },
+            onLoadSuccess: function (data) {
+                $('.detail').linkbutton({ text: '发送邮件', plain: true, iconCls: 'icon-redo' });
+            },
+            columns: [[
+                { field: 'F_Id', hidden: true },
+                { field: 'F_EmailAddress', title: '收件人邮箱', width: 150, align: 'center' },
+                { field: 'F_EmailContent', title: '发送内容', width: 300, align: 'center' },
+                //{
+                //    field: 'F_OrganizeId', title: '归属机构', width: 200, align: 'center',
+                //    formatter: function (value, row, index) {
+                //        return top.clients.organize[value] == null ? "" : top.clients.organize[value].fullname;
+                //    }
+                //},
+                {
+                    field: 'F_MailingType', title: '发送状态', width: 60, align: 'center',
+                    formatter: function (value, row, index) {
+                        if (value == 1) {
+                            return '<span class=\"label label-success\">已发送</span>';
+                        } else if (value == 0) {
+                            return '<span class=\"label label-default\">未发送</span>';
+                        }
+                    }
+                },
+                {
+                    field: 'F_ExpectedToSendTime', title: '发送时间', width: 130, align: 'center',
+                    formatter: function (value, row, index) {
+                        if (value) {
+                            var time = new Date(value);
+                            return time.getFullYear() + "-" + (time.getMonth() + 1) + "-" + time.getDate();
+                        }
+                    }
+                },
+                {
+                    field: '操作', title: '操作', width: 130, align: 'center',
+                    formatter: function (value, row, index) {
+                        var btn = '<a  href="#" class="detail"  onclick="Sendmail(\'' + row.F_Id + '\')">发送邮件</a>';
+                        return btn;
+                    }
+
+                },
+                // { field: 'T_Description', title: '备注', width: 200, align: 'right' }
+            ]]
+        });
+
+        $("#btn_search").click(function () {
+            var queryJson = {
+                keyword: $("#txt_keyword").val(),
+                mailingType: $('#F_MailingType').combobox('getValue'),
+                fromdate: $("#fromdate").val(),
+                todate: $("#todate").val()
+            }
+            $('#dg').datagrid('load', queryJson);
+        });
+    }
+
+
+    function btn_downLoadExcelTmp() {
+        var href = "@ViewData["templateUrl"]";
+        window.location.href = href;
+    }
+
+
+
+    function btn_add() {
+        $.modalOpen({
+            id: "Form",
+            title: "新建接收用户",
+            url: "/MissionManage/MmailingRecord/Form",
+            width: "500px",
+            height: "530px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+
+        });
+
+
+    }
+
+    function btn_edit() {
+        var keyValue = $('#dg').datagrid('getSelected');
+        if (keyValue != null) {
+            $.modalOpen({
+                id: "Form",
+                title: "修改接收用户",
+                url: "/MissionManage/MmailingRecord/Form?keyValue=" + keyValue.F_Id,
+                width: "500px",
+                height: "530px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].submitForm();
+                }
+                //  btn: null
+            });
+        } else {
+            $.modalMsg("未选中数据", "warning");
+        }
+    }
+    function btn_delete() {
+        var keyValue = $('#dg').datagrid('getSelected');
+        if (keyValue != null) {
+            $.deleteForm({
+                url: "/MissionManage/MmailingRecord/DeleteForm",
+                param: { keyValue: keyValue.F_Id },
+                success: function () {
+                    $('#dg').datagrid('reload');
+                }
+            })
+        } else {
+            $.modalMsg("未选中数据", "warning");
+        }
+    }
+
+    function Sendmail(id) {
+
+        $.ajax({
+            url: "/MissionManage/MmailingRecord/Sendmail",
+            data: { 'id': id },
+            type: "POST",
+            dataType: "json",
+            //contentType: "application/json;charset=utf-8",
+            async: false,
+            success: function (data) {
+                $.modalMsg("发送成功", "success");
+                $("#btn_search").click();
+            }
+        });
+
+    }
+
+    function importData() {
+
+        //$.ajax({
+        //    url: "/MissionManage/MmailingRecord/ImportData",
+        //    data: { 'id': id },
+        //    type: "POST",
+        //    dataType: "json",
+        //    //contentType: "application/json;charset=utf-8",
+        //    async: false,
+        //    success: function (data) {
+        //        $.modalMsg("发送成功", "success");
+        //        $("#btn_search").click();
+        //    }
+        //});
+
+    }
+
+
+
+</script>
+
+<div class="easyui-layout" data-options="fit:true">
+    <div id="toolbar" style="padding:2px 5px;">
+
+        <div class="dcui-btn-area">
+            <a href="#" id="NF-add" authorize="yes" class="dcui-btn dcui-btn-green" iconCls="icon-add" plain="true" onclick="btn_add()"><i class="fa fa-plus"></i>新建接收用户</a>
+            <a href="#" id="NF-delete" authorize="yes" class="dcui-btn dcui-btn-red" iconCls="icon-remove" plain="true" onclick="btn_delete()"><i class="fa fa-trash"></i>删除接收用户</a>
+            <a href="#" id="NF-edit" authorize="yes" class="dcui-btn dcui-btn-blue" iconCls="icon-edit" plain="true" onclick="btn_edit()"><i class="fa fa-pencil"></i>修改接收用户</a>
+            @*<a href="#" id="NF-importData" authorize="yes" class="dcui-btn dcui-btn-orange" plain="true"><i class="fa fa-paste" onclick="btn_importData()"></i>导入数据</a>*@
+            <a href="#" id="NF-importData" authorize="yes" class="dcui-btn dcui-btn-orange" iconCls="icon-edit" plain="true" onclick="btn_importData()"><i class="fa fa-pencil"></i>导入数据</a>
+            <a href="#" id="NF-downloadExcel" authorize="yes" class="dcui-btn dcui-btn-brown" iconCls="icon-control" plain="true" onclick="btn_downLoadExcelTmp()"><i class="fa fa-gavel"></i>下载导入模板</a>
+
+        </div>
+        <script>$('#toolbar').authorizeButton()</script>
+
+        <div class="dcui-search-area">
+            发送状态：
+            <select class="easyui-combobox" id="F_MailingType" name="F_MailingType" style="width:80px;">
+                <option value="">全部</option>
+                <option value="1">已发送</option>
+                <option value="0">未发送</option>
+            </select>
+            发送开始时间：
+            <input id="fromdate" style="width:110px;" class="easyui-datebox" />至
+            <input id="todate" style="width:110px;" class="easyui-datebox" />
+            关键字：<input class="easyui-textbox" style="width:110px" id="txt_keyword" placeholder="发送内容">
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" id="btn_search">查询</a>
+        </div>
+    </div>
+
+
+
+    <table id="dg" class="easyui-datagrid" style="width:100%;min-height:600px;height:100%;"></table>
+</div>
+
+
+
+
+

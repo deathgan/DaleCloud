@@ -1,0 +1,114 @@
+﻿@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+
+    $(function () {
+        $.ajax({
+            url: "/DingTalkManage/DingTalkConfig/GetFormJson",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                $("#form1").formSerialize(data);
+            }
+        });
+    });
+   
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "/DingTalkManage/DingTalkConfig/SubmitForm?keyValue=" + keyValue,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$('#dg').datagrid('reload');
+            }
+        })
+    }
+   
+</script>
+
+<form id="form1">
+    <div style="padding-top: 20px; margin-right: 20px;">
+        <table class="form">
+            <tr>
+                <th class="formTitle">企业ID号</th>
+                <td class="formValue">
+                    <input id="CorpId" name="CorpId" type="text" class="form-control required" placeholder="请输入企业ID" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">企业密钥</th>
+                <td class="formValue">
+                    <input id="CorpSecret" name="CorpSecret" type="text" class="form-control required" placeholder="请输入密钥" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">应用名称</th>
+                <td class="formValue">
+                    <input id="AppName" name="AppName" type="text" class="form-control required" placeholder="请输入应用名称" />
+                </td>
+            </tr>
+            
+            <tr>
+                <th class="formTitle">*接口地址</th>
+                <td class="formValue">
+                    <input id="ApiUrl" name="ApiUrl" type="text" class="form-control required" placeholder="" />
+
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">应用头像</th>
+                <td class="formValue">
+                    <div class="input-group">
+                        <input id="HeadPic" name="HeadPic" type="text" class="form-control" />
+                        <span class="input-group-btn">
+                            <a class="btn  btn-primary"><i class="fa fa-ellipsis-h"></i></a>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+           
+            <tr>
+                <th class="formTitle" style="height: 35px;">应用类型</th>
+                <td class="formValue" style="padding-top: 1px;">
+                    <select id="AppType" name="AppType" class="form-control required">
+                        <option value="0">小程序</option>
+                        <option value="1">微应用</option>
+                    </select>
+                </td>
+            </tr>
+           
+            <tr>
+                <th class="formTitle"></th>
+                <td class="formValue">
+                    <span style="color:blue;">以下为高级功能配置，非必填项</span>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">应用ID</th>
+                <td class="formValue">
+                    <input id="AgentId" name="AgentId" type="text" class="form-control " placeholder="" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">AppKey</th>
+                <td class="formValue">
+                    <input id="AppKey" name="AppKey" type="text" class="form-control " placeholder="" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">AppSecret</th>
+                <td class="formValue">
+                    <input id="AppSecret" name="AppSecret" type="text" class="form-control " placeholder="" />
+                </td>
+            </tr>
+           
+        </table>
+        <div class="btn-group">
+            <a class="btn btn-primary" onclick="submitForm()">保存配置</a>
+        </div>
+    </div>
+</form>

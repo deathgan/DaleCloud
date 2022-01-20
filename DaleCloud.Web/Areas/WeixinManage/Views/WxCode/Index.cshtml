@@ -1,0 +1,134 @@
+﻿@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    $(function () {
+        InitData();
+    });
+    function InitData() {
+        $.ajax({
+            url: "/WeixinManage/WxCode/GetFormJson",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                $("#form1").formSerialize(data);
+            }
+        });
+    }
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "/WeixinManage/WxCode/SubmitForm",
+            param: $("#form1").formSerialize(),
+            success: function () {
+               
+            }
+        })
+    }
+    function btnCreateUrl () {
+        var url=window.location.host+"/api/weixin/index?apiid=";
+        var apiid = $("#WxCode").val();
+        $("#ApiUrl").val(url + apiid);
+    }
+</script>
+
+<form id="form1">
+    <div style="padding-top: 20px; margin-right: 20px;">
+        <table class="form" width="600">
+            <tr>
+                <th class="formTitle">公众号名称</th>
+                <td class="formValue">
+                    <input id="WxName" name="WxName" type="text" class="form-control required" placeholder="请输入公众帐号名称" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">公众号原始ID</th>
+                <td class="formValue">
+                    <input id="WxId" name="WxId" type="text" class="form-control required" placeholder="请输入ID" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">微信号</th>
+                <td class="formValue">
+                    <input id="WxCode" name="WxCode" type="text" class="form-control required" placeholder="请输入微信号" />
+                </td>
+            </tr>
+
+            <tr>
+                <th class="formTitle">*接口地址</th>
+                <td class="formValue">
+                    <div class="input-group">
+                        <input id="ApiUrl" name="ApiUrl" type="text" class="form-control required" placeholder="自动生成" />
+                        <span class="input-group-btn">
+                            <a class="btn btn-primary" href="javascript:" id="btn_createurl" onclick="btnCreateUrl()">&nbsp;生成&nbsp;</a>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">头像</th>
+                <td class="formValue">
+                    <div class="input-group">
+                        <input id="HeadPic" name="HeadPic" type="text" class="form-control" />
+                        <span class="input-group-btn">
+                            <a class="btn  btn-primary"><i class="fa fa-ellipsis-h"></i></a>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle" valign="top" style="padding-top: 5px;">
+                    TOKEN值
+                </th>
+                <td class="formValue">
+                    <input id="WxToken" name="WxToken" type="text" class="form-control required" placeholder="请填写TOKEN值" />
+
+                </td>
+            </tr>
+            
+            <tr>
+                <th class="formTitle" style="height: 35px;">微信类型</th>
+                <td class="formValue" style="padding-top: 1px;">
+                    <select id="WxType" name="WxType" class="form-control required">
+                        <option value="0">订阅号</option>
+                        <option value="1">服务号</option>
+                        <option value="2">企业号</option>
+                        <option value="3">小程序</option>
+                    </select>
+                </td>
+            </tr>
+          
+
+            <tr>
+                <th class="formTitle"></th>
+                <td class="formValue">
+                    <span style="color:blue;">以下为高级功能配置，非必填项</span>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">AppId</th>
+                <td class="formValue">
+                    <input id="AppId" name="AppId" type="text" class="form-control " placeholder="" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">AppSecret</th>
+                <td class="formValue">
+                    <input id="AppSecret" name="AppSecret" type="text" class="form-control " placeholder="" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">Encoding</th>
+                <td class="formValue">
+                    <input id="Encoding" name="Encoding" type="text" class="form-control " placeholder="" />
+                </td>
+            </tr>
+        </table>
+        <div class="btn-group">
+            <a class="btn btn-primary" onclick="submitForm()">保存配置</a>
+        </div>
+    </div>
+</form>

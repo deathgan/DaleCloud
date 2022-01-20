@@ -1,0 +1,94 @@
+﻿@{ ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml"; }
+<script>
+    var keyValue = $.request("keyValue");
+    $(function () {
+      
+        if (!!keyValue) {
+            $.ajax({
+                url: "/MissionManage/MmailingRecord/GetFormJson",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {                                                         
+                    $("#form1").formSerialize(data);
+         
+
+                    $("#F_ExpectedToSendTime").datebox('setValue', data["F_ExpectedToSendTime"]);
+                    var mailingType = data["F_MailingType"];//手动加载radio的值
+                    if (mailingType == 1) {
+                        $("#F_MailingTypeChecked").prop("checked", "checked")
+                    }
+                    else
+                    {
+                        $("#F_MailingTypeUnChecked").prop("checked", "checked")
+                    }
+
+                }
+            });
+        }
+    });
+
+
+   
+
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+
+        var postData = $("#form1").formSerialize();
+        postData["F_MailingType"] = $("input[name='F_MailingType']:checked").val() ;
+
+        $.submitForm({
+            url: "/MissionManage/MmailingRecord/SubmitForm?keyValue=" + keyValue,
+            param: postData,  
+            success: function () {                
+                $.currentWindow().$('#dg').datagrid('reload');              
+            }
+        })
+    }</script>
+
+<form id="form1">
+    <div style="padding-top: 20px; margin-right: 20px;">
+        <table class="form">
+            <tr>
+                <th class="formTitle" style="padding-left:5px">预计发送时间</th>
+                <td class="formValue">
+                    @* value="@DateTime.Now.ToString("yyyy-MM-dd")" onfocus="WdatePicker({dateFmt:'yyyy-MM-dd',readOnly:true})"  *@
+                                <input id="F_ExpectedToSendTime" name="F_ExpectedToSendTime" class="easyui-datebox" required="required" />
+                            </td>
+            </tr>
+            <tr>
+                <th class="formTitle">收件人邮箱</th>
+                <td class="formValue">
+                    <input id="F_EmailAddress" name="F_EmailAddress" type="email" class="form-control required" placeholder="请输入收件人邮箱" />
+                </td>
+            </tr>
+
+            <tr>
+                <th class="formTitle" style="height: 35px;">是否已发送</th>
+                <td class="formValue" style="padding-top: 1px;">
+                    <label>
+                        <input id="F_MailingTypeUnChecked" type="radio" class="format-ctrl" name="F_MailingType"  value=0 checked="checked"> 未发送
+                        @*<var id="lang_chart_align_same"></var>*@
+                    </label>
+                    <label>
+                        <input id="F_MailingTypeChecked" type="radio" class="format-ctrl " name="F_MailingType"  value=1> 已发送
+                        @*<var id="lang_chart_align_reverse"></var>*@
+                    </label>
+
+                   
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle" valign="top" style="padding-top: 5px;">
+                    发送内容
+                </th>
+                <td class="formValue">
+                    <textarea id="F_EmailContent" name="F_EmailContent" class="form-control required" placeholder="请输入发送内容"  style="height: 260px;"></textarea>
+                </td>
+            </tr>
+        </table>
+    </div>
+</form>
